@@ -49,7 +49,7 @@ streamlit run app.py
 
  Live Demo
 
- https://marketing-campaign-funnel-performance-analysis-htbwpnyy8zqbn6q.streamlit.app
+ https://marketing-campaign-funnel-performance-analysis.streamlit.app/
 
 ---
 
