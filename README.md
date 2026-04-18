@@ -1,23 +1,61 @@
-# Marketing Campaign Funnel Analysis
+Marketing Campaign Funnel Analysis
 
-This Streamlit app analyzes marketing campaign funnel data, providing insights into impressions, clicks, leads, conversions, and revenue metrics.
+Overview
 
-## Features
-- Upload CSV campaign data
-- View funnel overview with metrics
-- Interactive bar charts
-- Channel performance analysis
-- Key insights and recommendations
+This project is a web-based analytics dashboard that helps analyze marketing campaign performance using funnel analysis, KPIs, and insights. It allows users to understand how customers move through different stages such as impressions, clicks, leads, and conversions.
 
-## Usage
-1. Upload your campaign data CSV file
-2. View the funnel analysis and visualizations
-3. Analyze channel performance
+---
 
-## Data Format
-The app expects CSV files with the following columns:
-- Impressions, Clicks, Leads, Conversions, Revenue
-- Channel_Used (for channel analysis)
+ Features
 
-## Deployment
-This app is deployed on Streamlit Cloud.
+-  Upload CSV dataset
+-  KPI Dashboard (Impressions, Clicks, Leads, Conversions)
+-  Funnel Visualization
+-  Channel Performance Analysis
+-  Automated Insights & Recommendations
+-  Interactive Filters
+
+---
+
+ Tech Stack
+
+- Python
+- Streamlit
+- Pandas
+- Plotly
+- Matplotlib
+
+---
+
+ How to Run Locally
+
+1. Clone the repository:
+
+git clone https://github.com/shreshthapurohit/Marketing-Campaign-Funnel-Performance-Analysis.git
+
+2. Navigate to project folder:
+
+cd Marketing-Campaign-Funnel-Performance-Analysis
+
+3. Install dependencies:
+
+pip install -r requirements.txt
+
+4. Run the app:
+
+streamlit run app.py
+
+---
+
+ Live Demo
+
+ https://marketing-campaign-funnel-performance-analysis-htbwpnyy8zqbn6q.streamlit.app
+
+---
+
+ Insights Generated
+
+- Best performing channel identification
+- Conversion rate analysis
+- Funnel drop-off detection
+- Data-driven recommendations
