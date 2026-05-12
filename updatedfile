@@ -1,0 +1,214 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+# -------------------------------
+# 🔹 PAGE CONFIG
+# -------------------------------
+st.set_page_config(
+    page_title="Marketing Funnel Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
+
+# -------------------------------
+# 🔹 CUSTOM CSS (PREMIUM UI)
+# -------------------------------
+st.markdown("""
+<style>
+body {
+    background-color: #0e1117;
+}
+.main {
+    background-color: #0e1117;
+}
+h1, h2, h3 {
+    color: #ffffff;
+}
+.stMetric {
+    background-color: #1c1f26;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# 🔹 HEADER
+# -------------------------------
+st.markdown("""
+# 📊 Marketing Funnel Analysis Dashboard  
+### Smart Analytics • Auto Detection • Real-Time Insights 🚀
+""")
+
+st.markdown("---")
+
+# -------------------------------
+# 🔹 FILE UPLOAD
+# -------------------------------
+st.markdown("### 📂 Upload Your Dataset")
+
+file = st.file_uploader("Upload CSV file", type=["csv"])
+
+# -------------------------------
+# 🔹 AUTO COLUMN DETECTION
+# -------------------------------
+def auto_map_columns(df):
+    col_map = {}
+
+    for col in df.columns:
+        c = col.lower()
+
+        if "impression" in c or "view" in c or "reach" in c:
+            col_map["impressions"] = col
+        elif "click" in c:
+            col_map["clicks"] = col
+        elif "lead" in c:
+            col_map["leads"] = col
+        elif "conversion" in c or "sale" in c:
+            col_map["conversions"] = col
+        elif "revenue" in c or "profit" in c:
+            col_map["revenue"] = col
+        elif "channel" in c or "platform" in c:
+            col_map["channel"] = col
+        elif "audience" in c or "segment" in c:
+            col_map["audience"] = col
+
+    return col_map
+
+# -------------------------------
+# 🔹 MAIN LOGIC
+# -------------------------------
+if file:
+    df = pd.read_csv(file)
+
+    st.success("✅ Dataset uploaded successfully!")
+
+    with st.expander("🔍 Preview Data"):
+        st.dataframe(df.head())
+
+    # Auto detect
+    col_map = auto_map_columns(df)
+
+    required = ["impressions","clicks","leads","conversions","revenue","channel","audience"]
+
+    # -------------------------------
+    # 🔹 FALLBACK (if detection fails)
+    # -------------------------------
+    if not all(k in col_map for k in required):
+        st.warning("⚠️ Auto-detection failed. Please map columns manually.")
+
+        columns = df.columns.tolist()
+
+        impressions_col = st.selectbox("Impressions", columns)
+        clicks_col = st.selectbox("Clicks", columns)
+        leads_col = st.selectbox("Leads", columns)
+        conversions_col = st.selectbox("Conversions", columns)
+        revenue_col = st.selectbox("Revenue", columns)
+        channel_col = st.selectbox("Channel", columns)
+        audience_col = st.selectbox("Audience", columns)
+
+    else:
+        st.success("🤖 Columns auto-detected successfully!")
+
+        impressions_col = col_map["impressions"]
+        clicks_col = col_map["clicks"]
+        leads_col = col_map["leads"]
+        conversions_col = col_map["conversions"]
+        revenue_col = col_map["revenue"]
+        channel_col = col_map["channel"]
+        audience_col = col_map["audience"]
+
+    # -------------------------------
+    # 🔹 DATA CLEANING
+    # -------------------------------
+    for col in [impressions_col, clicks_col, leads_col, conversions_col, revenue_col]:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    df.fillna(0, inplace=True)
+
+    # -------------------------------
+    # 🔹 SIDEBAR FILTERS
+    # -------------------------------
+    st.sidebar.title("🎛️ Filters")
+
+    channel_filter = st.sidebar.multiselect(
+        "Channel",
+        df[channel_col].unique(),
+        default=df[channel_col].unique()
+    )
+
+    audience_filter = st.sidebar.multiselect(
+        "Audience",
+        df[audience_col].unique(),
+        default=df[audience_col].unique()
+    )
+
+    df = df[
+        (df[channel_col].isin(channel_filter)) &
+        (df[audience_col].isin(audience_filter))
+    ]
+
+    if df.empty:
+        st.warning("No data available for selected filters")
+        st.stop()
+
+    # -------------------------------
+    # 🔹 METRICS
+    # -------------------------------
+    df["CTR"] = df[clicks_col] / df[impressions_col]
+    df["Lead_Rate"] = df[leads_col] / df[clicks_col]
+    df["Conversion_Rate"] = df[conversions_col] / df[leads_col]
+
+    df.replace([float('inf'), -float('inf')], 0, inplace=True)
+
+    st.markdown("---")
+
+    # -------------------------------
+    # 🔹 KPI CARDS
+    # -------------------------------
+    st.markdown("## 📌 Key Metrics")
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric("Revenue", int(df[revenue_col].sum()))
+    c2.metric("Conversions", int(df[conversions_col].sum()))
+    c3.metric("Clicks", int(df[clicks_col].sum()))
+    c4.metric("Leads", int(df[leads_col].sum()))
+
+    # -------------------------------
+    # 🔹 FUNNEL
+    # -------------------------------
+    st.markdown("## 🔻 Funnel Analysis")
+
+    funnel = df[[impressions_col, clicks_col, leads_col, conversions_col]].sum()
+
+    funnel_df = pd.DataFrame({
+        "Stage": ["Impressions", "Clicks", "Leads", "Conversions"],
+        "Values": funnel.values
+    })
+
+    fig = px.funnel(funnel_df, x="Values", y="Stage")
+    st.plotly_chart(fig, use_container_width=True)
+
+    # -------------------------------
+    # 🔹 CHANNEL PERFORMANCE
+    # -------------------------------
+    st.markdown("## 📈 Channel Performance")
+
+    channel_perf = df.groupby(channel_col)[revenue_col].sum()
+    st.bar_chart(channel_perf)
+
+    # -------------------------------
+    # 🔹 INSIGHTS
+    # -------------------------------
+    st.markdown("## 💡 Insights")
+
+    best_channel = channel_perf.idxmax()
+    avg_ctr = df["CTR"].mean()
+
+    st.write(f"🏆 Best Channel: **{best_channel}**")
+    st.write(f"📊 Avg CTR: **{avg_ctr:.2f}**")
+
+    st.success("✅ Analysis Complete!")
